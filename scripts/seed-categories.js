@@ -1,18 +1,18 @@
 'use strict';
 
 require('../require-main');
-require('../nodebb-global');
+require('./nodebb-global');
 
 const nconf = require('nconf');
 nconf.argv().env({ separator: '__' });
 
-const { paths } = require('../src/constants');
-const prestart = require('../src/prestart');
+const { paths } = require('./src/constants');
+const prestart = require('./src/prestart');
 
 prestart.loadConfig(paths.config);
 
-const db = require('../src/database');
-const categories = require('../src/categories');
+const db = require('./src/database');
+const categories = require('./src/categories');
 
 const tree = [
 	{
@@ -86,8 +86,16 @@ async function createTree(nodes, parentCid, order) {
 	await db.init();
 	const existingCids = await categories.getAllCidsFromSet('categories:cid');
 	if (existingCids.length) {
-		console.log('Categories already exist, skipping seed.');
-		process.exit(0);
+		const existingCats = await categories.getCategoriesData(existingCids);
+		const alreadySeeded = existingCats.some(c => c.name === tree[0].name);
+		if (alreadySeeded) {
+			console.log('Categories already seeded, skipping.');
+			process.exit(0);
+		}
+		console.log(`Purging ${existingCids.length} default categories...`);
+		for (const cid of existingCids) {
+			await categories.purge(cid, 1);
+		}
 	}
 	await createTree(tree, 0, 1);
 	console.log('SEED_DONE');
