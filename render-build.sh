@@ -16,5 +16,6 @@ if [ ! -f config.json ]; then
 fi
 
 node scripts/configure-email.js
+node scripts/configure-server.js
 
 node nodebb build
