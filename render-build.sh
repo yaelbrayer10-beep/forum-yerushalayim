@@ -15,4 +15,6 @@ if [ ! -f config.json ]; then
 	node scripts/seed-categories.js
 fi
 
+node scripts/configure-email.js
+
 node nodebb build
